@@ -1,1 +1,1 @@
-# Machine-Learning-of-PimaIndiansDiabetes2-mlbench-
+# Machine-Learning-PimaIndiansDiabetes2-mlbench-
