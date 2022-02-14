@@ -1,0 +1,143 @@
+library(mlbench)
+data("PimaIndiansDiabetes2",package = "mlbench")
+
+PID = na.omit(PimaIndiansDiabetes2)
+
+#==== Training data====
+library(dplyr)
+PID1 = PID%>%mutate(y=factor(ifelse(diabetes=="pos",1,0)))%>%select(-diabetes)
+str(PID1)
+
+set.seed(100)
+training.idx <- sample(1: nrow(PID1), size=nrow(PID1)*0.8)
+train.data <-PID1[training.idx, ]
+test.data <- PID1[-training.idx, ]
+
+#==== Logistic Classification====
+mlogit <- glm(y~., data = train.data, family = "binomial")
+Pred.p <-predict(mlogit, newdata =test.data, type = "response")
+y_pred_num <-ifelse(Pred.p > 0.5, 1, 0)
+pred_lr <-factor(y_pred_num, levels=c(0, 1))
+mean(y_pred_num ==test.data$y)
+
+#Confusion Matrix
+tab <-table(pred_lr,test.data$y)
+tab
+
+#chance of positive diabetes per unit change
+
+summary(mlogit)
+
+#==== kNN Classification ====
+kNN_PID = PID1
+nor <-function(x) { (x -min(x))/(max(x)-min(x)) }
+kNN_PID[,1:8] <- sapply(kNN_PID[,1:8], nor)
+
+set.seed(100)
+training.idx <- sample(1: nrow(kNN_PID), size=nrow(kNN_PID)*0.8)
+kNN_train.data <-kNN_PID[training.idx, ]
+kNN_test.data <- kNN_PID[-training.idx, ]
+
+library(class)
+set.seed(101)
+ac<-rep(0, 50)
+for(i in 1:50){
+  set.seed(101)
+  knn.i<-knn(kNN_train.data[,1:8], kNN_test.data[,1:8], cl=kNN_train.data$y, k=i)
+  ac[i]<-mean(knn.i ==kNN_test.data$y)
+  cat("k=", i, " accuracy=", ac[i], "\n")
+}
+plot(ac, type="b", xlab="K",ylab="Accuracy")
+
+set.seed(101)
+knn<-knn(kNN_train.data[,1:8], kNN_test.data[,1:8], cl=kNN_train.data$y, k=24)
+mean(knn == kNN_test.data$y) 
+
+table(knn,kNN_test.data$y)
+
+#==== SVM classification (Linear) ====
+library(e1071)
+l.svm<-svm(y~., data = train.data, kernel = "linear")
+
+#Predict new data
+l.pred.svm <- predict(l.svm, newdata=test.data[,1:8])
+#Confusion Matrix
+table(l.pred.svm, test.data$y)
+#Mean
+mean(l.pred.svm == test.data$y)
+
+#==== SVM classification (radial) ====
+set.seed(101)
+r.svm.tune<-tune.svm(y~., data=train.data, kernel="radial",cost=10^(-1:2), gamma=c(.1,.5,1,2))
+#visualize results of parameter tuning
+summary(r.svm.tune)
+plot(r.svm.tune)
+#confusion matrix and accuracy
+r.best.svm = r.svm.tune$best.model
+r.pred.svm = predict(r.best.svm, newdata=test.data[,1:8])
+table(r.pred.svm, test.data$y)
+#mean
+mean(r.pred.svm ==test.data$y)
+
+
+#==== SVM classification (sigmoid) ====
+set.seed(101)
+s.svm.tune<-tune.svm(y~., data=train.data, kernel="sigmoid",cost=10^(-1:2), gamma=c(.1,.5,1,2),coef0=c(0.1,0.5,1,2,3,4))
+summary(s.svm.tune)
+s.best.svm = s.svm.tune$best.model
+s.pred.svm = predict(s.best.svm, newdata = test.data[,1:8])
+table(s.pred.svm, test.data$y)
+mean(s.pred.svm == test.data$y)
+
+#==== SVM classification (polynomial) ====
+set.seed(101)
+p.svm.tune<-tune.svm(y~., data=train.data, kernel="polynomial", gamma=c(.1,.5,1,2),coef0=c(0.1,0.5,1,2),degree = 3)
+summary(p.svm.tune)
+
+p.best.svm = p.svm.tune$best.model
+p.pred.svm = predict(p.best.svm,newdata = test.data[,1:8])
+table(p.pred.svm, test.data$y)
+mean(p.pred.svm == test.data$y)
+
+#==== clustering ====
+set.seed(100)
+arr = scale(PID1[,1:8])
+k2.final <- kmeans(arr, 2, nstart = 25)
+k2.final
+table(PID1$y, k2.final$cluster)
+mean(PID1$y == k2.final$cluster - 1)
+#0.7397959
+
+#Scatterplot
+library(psych)
+pairs.panels(PID1[,1:8],
+             method = "pearson", # correlation method
+             hist.col = "steelblue",
+             pch = 21, bg = c("pink", "light green", "light blue")[(PID1$y)],
+             density = TRUE, # show density plots
+             ellipses = FALSE # show correlation ellipses
+)
+
+cor(PID1[,1:8])
+
+#==== Glucose and Mass ====
+library(dplyr)
+kNN_train_gm.data <- kNN_train.data%>%select(glucose,mass,y)
+kNN_test_gm.data <- kNN_test.data%>%select(glucose,mass,y)
+
+library(class)
+set.seed(101)
+ac<-rep(0, 50)
+for(i in 1:50){
+  set.seed(101)
+  knn.i<-knn(kNN_train_gm.data[,1:2], kNN_test_gm.data[,1:2], cl=kNN_train_gm.data$y, k=i)
+  ac[i]<-mean(knn.i ==kNN_test_gm.data$y)
+  cat("k=", i, " accuracy=", ac[i], "\n")
+}
+plot(ac, type="b", xlab="K",ylab="Accuracy")
+
+set.seed(101)
+knn_gm<-knn(kNN_train_gm.data[,1:2], kNN_test_gm.data[,1:2], cl=kNN_train_gm.data$y, k=24)
+mean(knn_gm == kNN_test_gm.data$y) 
+
+table(knn_gm,kNN_test_gm.data$y)
