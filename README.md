@@ -22,3 +22,19 @@ Since data consists of numerical variables, we removed observations with NA valu
 Using the [Pearson correlation coefficient](https://statistics.laerd.com/statistical-guides/pearson-correlation-coefficient-statistical-guide.php), we consider absolute values above 0.5 to be significant. From scatterplot matrix below, there are significant correlation between age and pregnant (0.68), tricep and mass (0.66) and glucose and insulin (0.58).
 
 ![scatterplot matrix](https://user-images.githubusercontent.com/97843966/153906081-0dcccc10-f87a-4308-9def-22ca31fa4e9b.png)
+
+Machine Learning
+---
+Train and test data set is split using in-built function sample() to randomly select observations in a 80:20 ratio. We identify the accuracy of the model using the following formula by checking the total of correctly identified observations over the total observation
+
+![Accuracy Formula](https://miro.medium.com/max/1400/0*qLxAWTs-gZjQvTi4.jpg)
+
+Our findings of accuracy can be summarized as shown in the table below and the code can be found [here](https://github.com/fungiiiii/Machine-Learning-of-PimaIndiansDiabetes2-mlbench-/blob/main/main) 
+
+![summary table](https://user-images.githubusercontent.com/97843966/154002715-bf59af04-0133-4b7f-b8fc-1b71af17043a.PNG)
+
+Conclusion
+---
+kNN classifcation is the best model based purely on accuracy at 82.3%. Since kNN is a non-parametric approach, the model has no assumptions of distribution on the data. However, kNN is sensitive to scale of data and noise.
+
+*A machine learning project done in April 2021*
