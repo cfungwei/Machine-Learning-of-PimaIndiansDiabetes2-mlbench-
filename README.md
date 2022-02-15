@@ -37,4 +37,5 @@ Conclusion
 ---
 kNN classifcation is the best model based purely on accuracy at 82.3%. Since kNN is a non-parametric approach, the model has no assumptions of distribution on the data. However, kNN is sensitive to scale of data and noise.
 
-*A machine learning project done in April 2021*
+*A machine learning project done in April 2021
+Credits: Ang Kian Hao, Julianne Thatcher Low, Seng Swee Keng*
